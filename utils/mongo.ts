@@ -4,26 +4,31 @@ import { MongoClient, Db } from 'mongodb';
 const url = 'mongodb://localhost:27017';
 const dbName = 'tter'
 
-let db: Db;
+let db;
 
-MongoClient.connect(url, function (err, client) {
-    if (err) {
-        console.error(err);
-        return;
+async function getDb(): Promise<Db> {
+    if(db) {
+        return Promise.resolve(db);
     }
-    console.log("Connected successfully to server");
+    return new Promise((resolve, reject) => {
+        MongoClient.connect(url, function (err, client) {
+            if (err) {
+                reject(err);
+            }
+            console.log("Connected successfully to server");
 
-    db = client.db(dbName);
-});
+            db = client.db(dbName);
+            resolve(db);
+        })
+    });
+}
 
-export default db;
-
-export function getUsersCollection() {
-    if(!db) throw "no db connection";
+export async function getUsersCollection() {
+    const db = await getDb();
     return db.collection("users");
 }
 
-export function getRoomsCollection() {
-    if(!db) throw "no db connection";
+export async function getRoomsCollection() {
+    const db = await getDb();
     return db.collection("rooms");
 }

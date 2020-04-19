@@ -6,10 +6,10 @@ async function handler(req, res) {
     if(!userId) throw "Unknown user";
 
     const room = await getRoom(req.query.roomid);
-    if(room.permission.owner!=userId){
+    if(room.permission.owner!=userId && room.permission.editors.indexOf(userId)===-1){
         throw "You are not allowed to modify";
     }
-    const rooms = getRoomsCollection();
+    const rooms = await getRoomsCollection();
     rooms.updateOne({_id: room._id}, {"$inc": {"game.counter": 1}});
 
     res.send({});
@@ -30,7 +30,10 @@ export interface Room {
     date: {
         creation: Date,
         last_modified: Date
-    };
+    },
+    tokens: {
+        edit: string
+    },
 }
 
 export async function getRoom(roomIdStr: string): Promise<Room> {
@@ -39,6 +42,6 @@ export async function getRoom(roomIdStr: string): Promise<Room> {
     }
     const roomId = parseInt(roomIdStr);
 
-    const rooms = getRoomsCollection();
+    const rooms = await getRoomsCollection();
     return await rooms.findOne({_id: roomId});
 }

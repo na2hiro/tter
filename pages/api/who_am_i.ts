@@ -4,7 +4,7 @@ import {getUsersCollection} from "../../utils/mongo";
 async function handler(req, res) {
     let userId = req.session.get("user_id");
     if(!userId) {
-        const userCollection = getUsersCollection();
+        const userCollection = await getUsersCollection();
         const latestUser = userCollection.find().sort({_id: -1}).limit(1);
         if(await latestUser.hasNext()) {
             userId = (await latestUser.next())._id + 1;
