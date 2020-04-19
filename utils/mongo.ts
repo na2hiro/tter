@@ -22,3 +22,8 @@ export function getUsersCollection() {
     if(!db) throw "no db connection";
     return db.collection("users");
 }
+
+export function getRoomsCollection() {
+    if(!db) throw "no db connection";
+    return db.collection("rooms");
+}

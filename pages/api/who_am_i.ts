@@ -15,6 +15,9 @@ async function handler(req, res) {
             _id: userId,
             initialRequest: {
                 raddr: req.connection.remoteAddress
+            },
+            date: {
+                creation: new Date(),
             }
         })
         req.session.set("user_id", userId);
