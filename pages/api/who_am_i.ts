@@ -1,9 +1,22 @@
 import withSession from "../../utils/session";
+import {getUsersCollection} from "../../utils/mongo";
 
 async function handler(req, res) {
     let userId = req.session.get("user_id");
     if(!userId) {
-        userId = Math.floor(10000000*Math.random());
+        const userCollection = getUsersCollection();
+        const latestUser = userCollection.find().sort({_id: -1}).limit(1);
+        if(await latestUser.hasNext()) {
+            userId = (await latestUser.next())._id + 1;
+        } else {
+            userId = 1;
+        }
+        await userCollection.insert({
+            _id: userId,
+            initialRequest: {
+                raddr: req.connection.remoteAddress
+            }
+        })
         req.session.set("user_id", userId);
         await req.session.save();
     }
