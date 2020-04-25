@@ -1,9 +1,6 @@
-import { NextPage } from "next";
-import { getRoomsCollection } from "../../../utils/mongo";
-import { getRoom } from "../../api/room/[roomid]";
 import withSession from "../../../utils/session";
 import { serverRedirect, BrowserRedirect } from "../../../utils/redirects";
-import { Redirect } from "next/dist/lib/check-custom-routes";
+import { getRoom, getRoomsCollection } from "../../../stores/RoomStore";
 
 const RoomPage = BrowserRedirect;
 export default RoomPage;

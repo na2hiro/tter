@@ -1,24 +1,36 @@
 {
-  "name": "shogitter-alpha",
+  "name": "tter",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "next",
+    "dev": "ts-node --project tsconfig.server.json server.ts",
     "build": "next build",
-    "start": "next start"
+    "start": "NODE_ENV=production next dev",
+    "start:old": "next start"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/cookie": "^0.3.3",
+    "@types/express": "^4.17.6",
     "@types/mongodb": "^3.5.8",
+    "@types/socket.io": "^2.1.4",
+    "@types/socket.io-client": "^1.4.32",
+    "@types/socket.io-emitter": "^3.1.0",
     "axios": "^0.19.2",
+    "cookie": "^0.4.1",
+    "express": "^4.17.1",
     "mongodb": "^3.5.6",
     "next": "^9.3.5",
     "next-iron-session": "^3.1.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "swr": "^0.2.0"
+    "socket.io": "^2.3.0",
+    "socket.io-client": "^2.3.0",
+    "socket.io-emitter": "^3.1.1",
+    "swr": "^0.2.0",
+    "ts-node": "^8.9.0"
   },
   "devDependencies": {
     "@types/node": "^13.13.0",

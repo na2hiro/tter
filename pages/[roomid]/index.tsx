@@ -1,10 +1,12 @@
 import { NextPage } from "next";
 import {useRouter} from "next/router";
 import ErrorPage from "next/error";
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { getRoom } from "../api/room/[roomid]";
+import Link from "next/link";
+import { useState, useEffect, useContext } from "react";
 import withSession from "../../utils/session";
+import io from "socket.io-client"
+import { JoinRequest, UpdateResponse } from "../../server/room.models";
+import { getRoom } from "../../stores/RoomStore";
 
 interface Props {
     role: "owner" | "editor" | "player" | "viewer",
@@ -17,24 +19,46 @@ interface Props {
 
 const RoomPage: NextPage<Props> = ({owner, game, role, tokens}) => {
     const router = useRouter();
-    const [currentUrl, setCurrentUrl] = useState("");
-    const [counter, setCounter] = useState(game?.counter);
-
-    useEffect(() => {
-        setCurrentUrl(location.href);
-    })
+    const roomId: string = router.query.roomid as string;
 
     if (!owner || !game) {
         return <ErrorPage statusCode={404} />;
     }
 
-    const { roomid } = router.query;
+    return <Room {...{owner, game, role, tokens, roomId}} key={roomId} />;
+};
+export default RoomPage;
+
+const Room = ({owner, game, role, tokens, roomId}) => {
+    const router = useRouter();
+    const [currentUrl, setCurrentUrl] = useState("");
+    const [counter, setCounter] = useState(game?.counter);
+    const [socket, setSocket] = useState(null);
+
+
+    useEffect(() => {
+        setCurrentUrl(location.href);
+
+        const socket = io(`/room`);
+        setSocket(socket);
+
+        const join: JoinRequest = {roomId};
+        socket.emit("join", join)
+        socket.on("update", (latestState: UpdateResponse) => {
+            console.log("update");
+            setCounter(latestState.game);
+        })
+
+        return () => {
+            socket.disconnect();
+        }
+    }, []);
+
     return <>
-        <h1>{owner}'s Room: #{roomid}</h1>
+        <h1>{owner}'s Room: #{roomId}</h1>
         <p>Your role: {role}</p>
-        <button disabled={role=="viewer"} style={{fontSize: "100px"}} onClick={()=>{
-            setCounter((c) => c+1);
-            axios.get(`/api/room/${roomid}`);
+        <button disabled={!socket || role=="viewer"} style={{fontSize: "100px"}} onClick={()=>{
+            socket!.emit("update", {roomId, data: counter+1});
         }}>{counter}</button>
         <h2>Share</h2>
         <ul>
@@ -42,9 +66,9 @@ const RoomPage: NextPage<Props> = ({owner, game, role, tokens}) => {
             {role==="owner" &&
                 <li>Share to edit <input value={`${currentUrl}/edit/${tokens.edit}`} size={50} readOnly /></li>}
         </ul>
+        <Link as={`${parseInt(roomId)-1}`} href="[roomid]">Go to previous room</Link>
     </>;
-  };
-export default RoomPage;
+}
 
 export const getServerSideProps = withSession(async function(context) {
     const room = await getRoom(context.query.roomid);

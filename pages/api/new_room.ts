@@ -1,7 +1,6 @@
 
 import withSession from "../../utils/session";
-import {getRoomsCollection} from "../../utils/mongo";
-import { Room } from "./room/[roomid]";
+import { Room, getRoomsCollection } from "../../stores/RoomStore";
 const crypto = require('crypto');
 
 async function handler(req, res) {

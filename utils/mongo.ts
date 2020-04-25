@@ -6,7 +6,7 @@ const dbName = 'tter'
 
 let db;
 
-async function getDb(): Promise<Db> {
+export async function getDb(): Promise<Db> {
     if(db) {
         return Promise.resolve(db);
     }
@@ -14,6 +14,7 @@ async function getDb(): Promise<Db> {
         MongoClient.connect(url, function (err, client) {
             if (err) {
                 reject(err);
+                return;
             }
             console.log("Connected successfully to server");
 
@@ -26,9 +27,4 @@ async function getDb(): Promise<Db> {
 export async function getUsersCollection() {
     const db = await getDb();
     return db.collection("users");
-}
-
-export async function getRoomsCollection() {
-    const db = await getDb();
-    return db.collection("rooms");
 }
