@@ -2,16 +2,17 @@ import { NextPage } from "next";
 import {useRouter} from "next/router";
 import ErrorPage from "next/error";
 import Link from "next/link";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import withSession from "../../utils/session";
 import io from "socket.io-client"
-import { JoinRequest, UpdateResponse } from "../../server/room.models";
 import { getRoom } from "../../stores/RoomStore";
+import { CounterState } from "../../models/Game";
+import { JoinRequest, UpdateResponse, GetUpdateRequest } from "../../models/messages";
 
 interface Props {
     role: "owner" | "editor" | "player" | "viewer",
     owner: number;
-    game: {counter: number};
+    game: CounterState;
     tokens: null | {
         edit: string
     }
@@ -30,11 +31,9 @@ const RoomPage: NextPage<Props> = ({owner, game, role, tokens}) => {
 export default RoomPage;
 
 const Room = ({owner, game, role, tokens, roomId}) => {
-    const router = useRouter();
     const [currentUrl, setCurrentUrl] = useState("");
     const [counter, setCounter] = useState(game?.counter);
     const [socket, setSocket] = useState(null);
-
 
     useEffect(() => {
         setCurrentUrl(location.href);
@@ -44,9 +43,14 @@ const Room = ({owner, game, role, tokens, roomId}) => {
 
         const join: JoinRequest = {roomId};
         socket.emit("join", join)
-        socket.on("update", (latestState: UpdateResponse) => {
-            console.log("update");
-            setCounter(latestState.game);
+        socket.on("update", (latestState: UpdateResponse<CounterState>) => {
+            console.log("update", latestState);
+            setCounter(latestState.game.counter);
+        })
+        socket.on("reconnect", () => {
+            console.log("reconnect");
+            const msg: GetUpdateRequest = {roomId};
+            socket.emit("getUpdate", msg);
         })
 
         return () => {

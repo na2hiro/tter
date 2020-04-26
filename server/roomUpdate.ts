@@ -1,20 +1,23 @@
-import { UpdateRequest } from "./room.models";
 import { getRoom, getRoomsCollection } from "../stores/RoomStore";
+import { CounterGame } from "../models/Game";
+import { UpdateRequest } from "../models/messages";
 
-const roomUpdate = async (msg: UpdateRequest, userId?: number) => {
+const roomUpdate = async <T>(msg: UpdateRequest<T>, userId?: number) => {
     if(!userId) throw "Unknown user";
 
     const room = await getRoom(msg.roomId);
     if (room.permission.owner != userId && room.permission.editors.indexOf(userId) === -1) {
         throw "You are not allowed to modify";
     }
-    const rooms = await getRoomsCollection();
-    const doc = await rooms.findOneAndUpdate(
-        { _id: room._id },
-        { "$inc": { "game.counter": 1 } },
-        { returnOriginal: false });
+    const game = new CounterGame(room.game);
+    const newState = await game.update(msg.command);
 
-    return doc.value.game.counter;
+    const rooms = await getRoomsCollection();
+    await rooms.updateOne(
+        { _id: room._id },
+        { "$set": { "game": newState } });
+
+    return newState;
 }
 
 export default roomUpdate;

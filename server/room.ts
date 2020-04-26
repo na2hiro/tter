@@ -2,8 +2,10 @@ import socket from "socket.io";
 import cookie from "cookie";
 import ironStore from "iron-store";
 import password from "../password";
-import { UpdateRequest, JoinRequest, UpdateResponse } from "./room.models";
 import roomUpdate from "./roomUpdate";
+import roomGet from "./roomGet";
+import { CounterState } from "../models/Game";
+import { JoinRequest, UpdateRequest, UpdateResponse, GetUpdateRequest } from "../models/messages";
 
 const configureRoom = (io: socket.Server) => {
     const room = io
@@ -24,11 +26,17 @@ const configureRoom = (io: socket.Server) => {
                 console.log("joined", roomId)
                 socket.join(`${roomId}`);
             });
-            socket.on("update", async (msg: UpdateRequest) => {
+            socket.on("update", async (msg: UpdateRequest<CounterState>) => {
                 const newGame = await roomUpdate(msg, store?.get("user_id"))
-                const updateResponse: UpdateResponse = {game: newGame};
+                const updateResponse: UpdateResponse<CounterState> = {game: newGame};
                 console.log("update", updateResponse);
                 room.to(msg.roomId).emit("update", updateResponse);
+            });
+            socket.on("getUpdate", async (msg: GetUpdateRequest) => {
+                const newGame = await roomGet(msg, store?.get("user_id"))
+                const updateResponse: UpdateResponse<CounterState> = {game: newGame};
+                console.log("getUpdate", updateResponse);
+                socket.emit("getUpdate", updateResponse);
             });
         });
 }

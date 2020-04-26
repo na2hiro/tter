@@ -1,6 +1,7 @@
 
 import withSession from "../../utils/session";
 import { Room, getRoomsCollection } from "../../stores/RoomStore";
+import { CounterGame } from "../../models/Game";
 const crypto = require('crypto');
 
 async function handler(req, res) {
@@ -18,9 +19,7 @@ async function handler(req, res) {
 
     const room: Room = {
         _id: roomId,
-        game: {
-            counter: 0
-        },
+        game: new CounterGame().getState(),
         permission: {
             owner: userId,
             editors: [],
