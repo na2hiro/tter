@@ -1,23 +1,61 @@
-import { useEffect, useState } from "react";
-import io from "socket.io-client";
+import crypto from 'crypto';
+import withSession from "../utils/session";
+import { Room, getRoomsCollection } from "../stores/RoomStore";
+import { CounterGame } from "../models/Game";
+import { serverRedirect, BrowserRedirect } from "../utils/redirects";
 
-function HomePage() {
-    const [socket, setSocket] = useState(null);
-    useEffect(() => {
-        const socket = io();
-        setSocket(socket);
-        console.log("connected");
-        socket.emit("echo", { hello: "world" })
-        socket.on("echo", (msg) => {
-            console.log("got echo back", msg);
-        })
-
-        return () => {
-            setSocket(null);
-            socket.close();
-        }
-    }, [])
-    return <div>Welcome to Next.js!<button onClick={()=>{socket?.emit("echo", "hi!!")}}>Emit</button></div>
-}
+const HomePage = BrowserRedirect;
   
 export default HomePage;
+
+export const getServerSideProps = withSession(async function(ctx) {
+    const {req, res} = ctx;
+    const userId = req.session.get("user_id");
+
+    const roomsCollection = await getRoomsCollection();
+    const latestUsersRoom = roomsCollection.find({"permission.owner": userId}).sort({_id: -1}).limit(1);
+    if (await latestUsersRoom.hasNext()) {
+        return serverRedirect(ctx, {
+            href: `/[roomid]`,
+            asPath: `/${(await latestUsersRoom.next())._id}`,
+            permanent: true,
+        });
+    }
+
+    const latestRoom = roomsCollection.find().sort({ _id: -1 }).limit(1);
+    let roomId;
+    if (await latestRoom.hasNext()) {
+        roomId = (await latestRoom.next())._id + 1;
+    } else {
+        roomId = 1;
+    }
+
+    const room: Room = {
+        _id: roomId,
+        game: new CounterGame().getState(),
+        permission: {
+            owner: userId,
+            editors: [],
+            players: [],
+        },
+        date: {
+            creation: new Date(),
+            last_modified: new Date()
+        },
+        tokens: {
+            edit: generateRandomToken(6)
+        }
+    };
+
+    await roomsCollection.insert(room);
+
+    return serverRedirect(ctx, {
+        href: `/[roomid]`,
+        asPath: `/${roomId}`,
+        permanent: true,
+    })
+});
+
+function generateRandomToken(length: number) {
+    return crypto.randomBytes(length).toString('base64').substring(0, length).replace(/\//g, ":").replace(/\+/g, "_");
+}
