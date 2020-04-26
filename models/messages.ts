@@ -12,3 +12,12 @@ export type UpdateResponse<T> = {
 export type JoinRequest = {
     roomId: string;
 }
+
+export type ActiveRoomsResponse = {
+    activeRooms: ActiveRoom[]
+}
+
+export type ActiveRoom = {
+    roomId: string;
+    users: number[];
+}

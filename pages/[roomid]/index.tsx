@@ -7,7 +7,7 @@ import withSession from "../../utils/session";
 import io from "socket.io-client"
 import { getRoom } from "../../stores/RoomStore";
 import { CounterState } from "../../models/Game";
-import { JoinRequest, UpdateResponse, GetUpdateRequest } from "../../models/messages";
+import { JoinRequest, UpdateResponse, GetUpdateRequest, ActiveRoomsResponse, ActiveRoom } from "../../models/messages";
 
 interface Props {
     role: "owner" | "editor" | "player" | "viewer",
@@ -15,10 +15,11 @@ interface Props {
     game: CounterState;
     tokens: null | {
         edit: string
-    }
+    };
+    userId: number;
 }
 
-const RoomPage: NextPage<Props> = ({owner, game, role, tokens}) => {
+const RoomPage: NextPage<Props> = ({owner, game, role, tokens, userId}) => {
     const router = useRouter();
     const roomId: string = router.query.roomid as string;
 
@@ -26,14 +27,15 @@ const RoomPage: NextPage<Props> = ({owner, game, role, tokens}) => {
         return <ErrorPage statusCode={404} />;
     }
 
-    return <Room {...{owner, game, role, tokens, roomId}} key={roomId} />;
+    return <Room {...{owner, game, role, tokens, roomId, userId}} key={roomId} />;
 };
 export default RoomPage;
 
-const Room = ({owner, game, role, tokens, roomId}) => {
+const Room = ({owner, game, role, tokens, roomId, userId}) => {
     const [currentUrl, setCurrentUrl] = useState("");
     const [counter, setCounter] = useState(game?.counter);
     const [socket, setSocket] = useState(null);
+    const [activeRooms, setActiveRooms] = useState<ActiveRoom[]>([]);
 
     useEffect(() => {
         setCurrentUrl(location.href);
@@ -46,6 +48,10 @@ const Room = ({owner, game, role, tokens, roomId}) => {
         socket.on("update", (latestState: UpdateResponse<CounterState>) => {
             console.log("update", latestState);
             setCounter(latestState.game.counter);
+        })
+        socket.on("activeRooms", (res: ActiveRoomsResponse) => {
+            console.log("activeRooms")
+            setActiveRooms(res.activeRooms);
         })
         socket.on("reconnect", () => {
             console.log("reconnect");
@@ -69,6 +75,25 @@ const Room = ({owner, game, role, tokens, roomId}) => {
             <li>Share to watch <input value={`${currentUrl}#`} size={50} readOnly /></li>
             {role==="owner" &&
                 <li>Share to edit <input value={`${currentUrl}/edit/${tokens.edit}`} size={50} readOnly /></li>}
+        </ul>
+        <h2>Active rooms</h2>
+        <ul>
+            {activeRooms.map(activeRoom => {
+                const youreIn = activeRoom.users.indexOf(userId)>=0;
+                const count = activeRoom.users.length;
+                let message;
+                if(youreIn) {
+                    if(count>1) {
+                        message = `you + ${count-1} users`;
+                    } else {
+                        message = "you";
+                    }
+                } else {
+                    message = `${count} users`;
+                }
+                return <li key={activeRoom.roomId} style={{fontWeight: youreIn ? "bold" : "normal"}}>
+                <Link as={`/${activeRoom.roomId}`} href="/[roomid]"><a>#{activeRoom.roomId}</a></Link> ({message})
+            </li>})}
         </ul>
         <Link as={`${parseInt(roomId)-1}`} href="[roomid]">Go to previous room</Link>
     </>;
@@ -100,7 +125,8 @@ export const getServerSideProps = withSession(async function(context) {
             role,
             owner: room.permission.owner,
             game: room.game,
-            tokens
+            tokens,
+            userId
         }
     };
 });
