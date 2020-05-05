@@ -21,3 +21,4 @@ export class CounterGame implements Game<CounterState, never> {
         return this.state;
     }
 }
+

@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import withSession from "../utils/session";
 import { Room, getRoomsCollection } from "../stores/RoomStore";
-import { CounterGame } from "../models/Game";
+import Shogi from "shogitter.ts";
 import { serverRedirect, BrowserRedirect } from "../utils/redirects";
 
 const HomePage = BrowserRedirect;
@@ -29,10 +29,12 @@ export const getServerSideProps = withSession(async function(ctx) {
     } else {
         roomId = 1;
     }
+    const game = new Shogi(0);
+    game.start();
 
-    const room: Room = {
+    const room: Room<any> = {
         _id: roomId,
-        game: new CounterGame().getState(),
+        game: game.getObject(),
         permission: {
             owner: userId,
             editors: [],
@@ -47,7 +49,7 @@ export const getServerSideProps = withSession(async function(ctx) {
         }
     };
 
-    await roomsCollection.insert(room);
+    await roomsCollection.insertOne(room);
 
     return serverRedirect(ctx, {
         href: `/[roomid]`,

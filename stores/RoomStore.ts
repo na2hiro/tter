@@ -1,10 +1,8 @@
 import { getDb } from "../utils/mongo";
 
-export interface Room {
+export interface Room<G> {
     _id: number,
-    game: {
-        counter: number
-    },
+    game: G,
     permission: {
         owner: number,
         editors: number[],
@@ -19,7 +17,7 @@ export interface Room {
     },
 }
 
-export async function getRoom(roomIdStr: string): Promise<Room> {
+export async function getRoom<G>(roomIdStr: string): Promise<Room<G>> {
     if (typeof roomIdStr !== "string" || !/^\d+$/.test(roomIdStr)) {
         return null;
     }

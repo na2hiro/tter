@@ -4,7 +4,7 @@ import ironStore from "iron-store";
 import password from "../password";
 import roomUpdate from "./roomUpdate";
 import roomGet from "./roomGet";
-import { CounterState } from "../models/Game";
+import {KifuCommand, ShogiSerialization} from "shogitter.ts";
 import { JoinRequest, UpdateRequest, UpdateResponse, GetUpdateRequest, ActiveRoomsResponse } from "../models/messages";
 
 const rooms: {[room: string]: number[]} = {};
@@ -36,15 +36,16 @@ const configureRoom = (io: socket.Server) => {
                 socket.join(`${roomId}`);
                 room.emit("activeRooms", calcActiveRooms());
             });
-            socket.on("update", async (msg: UpdateRequest<CounterState>) => {
+            socket.on("update", async (msg: UpdateRequest<KifuCommand>) => {
+                console.log("message", msg)
                 const newGame = await roomUpdate(msg, userId)
-                const updateResponse: UpdateResponse<CounterState> = {game: newGame};
+                const updateResponse: UpdateResponse<ShogiSerialization> = {game: newGame};
                 console.log("update", updateResponse);
                 room.to(msg.roomId).emit("update", updateResponse);
             });
             socket.on("getUpdate", async (msg: GetUpdateRequest) => {
-                const newGame = await roomGet(msg, userId)
-                const updateResponse: UpdateResponse<CounterState> = {game: newGame};
+                const newGame = await roomGet<ShogiSerialization>(msg, userId)
+                const updateResponse: UpdateResponse<ShogiSerialization> = {game: newGame};
                 console.log("getUpdate", updateResponse);
                 socket.emit("getUpdate", updateResponse);
             });

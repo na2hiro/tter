@@ -2,17 +2,18 @@ import { NextPage } from "next";
 import {useRouter} from "next/router";
 import ErrorPage from "next/error";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import {useState, useEffect, FunctionComponent, useMemo} from "react";
 import withSession from "../../utils/session";
 import io from "socket.io-client"
 import { getRoom } from "../../stores/RoomStore";
 import { CounterState } from "../../models/Game";
 import { JoinRequest, UpdateResponse, GetUpdateRequest, ActiveRoomsResponse, ActiveRoom } from "../../models/messages";
+import Shogi, { ShogiSerialization } from "shogitter.ts";
 
 interface Props {
     role: "owner" | "editor" | "player" | "viewer",
     owner: number;
-    game: CounterState;
+    game: ShogiSerialization;
     tokens: null | {
         edit: string
     };
@@ -31,9 +32,16 @@ const RoomPage: NextPage<Props> = ({owner, game, role, tokens, userId}) => {
 };
 export default RoomPage;
 
-const Room = ({owner, game, role, tokens, roomId, userId}) => {
+type InnerProps = Props & {
+    roomId: string,
+}
+
+const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId, userId}) => {
     const [currentUrl, setCurrentUrl] = useState("");
-    const [counter, setCounter] = useState(game?.counter);
+    const [state, setState] = useState(game);
+    const shogi = useMemo(() => {
+        return new Shogi(state);
+    }, [state]);
     const [socket, setSocket] = useState(null);
     const [activeRooms, setActiveRooms] = useState<ActiveRoom[]>([]);
 
@@ -45,9 +53,9 @@ const Room = ({owner, game, role, tokens, roomId, userId}) => {
 
         const join: JoinRequest = {roomId};
         socket.emit("join", join)
-        socket.on("update", (latestState: UpdateResponse<CounterState>) => {
+        socket.on("update", (latestState: UpdateResponse<ShogiSerialization>) => {
             console.log("update", latestState);
-            setCounter(latestState.game.counter);
+            setState(latestState.game);
         })
         socket.on("activeRooms", (res: ActiveRoomsResponse) => {
             console.log("activeRooms")
@@ -67,9 +75,20 @@ const Room = ({owner, game, role, tokens, roomId, userId}) => {
     return <>
         <h1>{owner}'s Room: #{roomId}</h1>
         <p>Your role: {role}</p>
-        <button disabled={!socket || role=="viewer"} style={{fontSize: "100px"}} onClick={()=>{
-            socket!.emit("update", {roomId, data: counter+1});
-        }}>{counter}</button>
+        <pre>{shogi.ban.__toString()}</pre>
+        <pre style={{height: "300px", overflowY: "scroll"}}>
+            {JSON.stringify(state, null, 2)}
+        </pre>
+        <Form onSubmit={(commandText: string) => {
+            try {
+                socket!.emit("update", {roomId, command: JSON.parse(commandText)});
+            }catch(e) {
+                document.body.style.backgroundColor="#ddd";
+                setTimeout(() => {
+                    document.body.style.backgroundColor="#fff";
+                }, 100)
+            }
+        }} disabled={!socket || role=="viewer"} />
         <h2>Share</h2>
         <ul>
             <li>Share to watch <input value={`${currentUrl}#`} size={50} readOnly /></li>
@@ -95,8 +114,16 @@ const Room = ({owner, game, role, tokens, roomId, userId}) => {
                 <Link as={`/${activeRoom.roomId}`} href="/[roomid]"><a>#{activeRoom.roomId}</a></Link> ({message})
             </li>})}
         </ul>
-        <Link as={`${parseInt(roomId)-1}`} href="[roomid]">Go to previous room</Link>
+        <Link as={`${parseInt(roomId)-1}`} href="[roomid]"><a>Go to previous room</a></Link>
     </>;
+}
+
+const Form = ({onSubmit, disabled}) => {
+    const [text, setText] = useState("");
+    return <form onSubmit={(e) => {e.preventDefault(); onSubmit(text)}}>
+        <input type="text" name="kifu" value={text} onChange={(e) => setText(e.target.value)} size={50}/>
+        <input disabled={disabled} type="submit" value={"Submit"} />
+    </form>
 }
 
 export const getServerSideProps = withSession(async function(context) {
