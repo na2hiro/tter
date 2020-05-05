@@ -16,6 +16,10 @@ type Context = {
 }
 type Handler = (context: Context) => Promise<any>
 
+/**
+ * Make sure userId exists in session. Generate if user is unknown
+ * @param handler 
+ */
 const withUserSession: (handler: Handler)=> Promise<any> = (handler) => {
   return withSession(async (context) => {
     const session = context.req.session
