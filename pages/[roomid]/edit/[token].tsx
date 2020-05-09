@@ -2,8 +2,8 @@ import withSession from "../../../utils/session";
 import { serverRedirect, BrowserRedirect } from "../../../utils/redirects";
 import { getRoom, getRoomsCollection } from "../../../stores/RoomStore";
 
-const RoomPage = BrowserRedirect;
-export default RoomPage;
+const EditPage = BrowserRedirect;
+export default EditPage;
 
 export const getServerSideProps = withSession(async function(ctx) {
     const {req, res} = ctx;

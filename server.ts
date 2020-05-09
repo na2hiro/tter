@@ -27,6 +27,8 @@ nextApp.prepare().then(() => {
 
     configureRoom(io);
 
+    app.use("/img", express.static("./node_modules/shogitter-react/dist/img/"));
+
     app.all('*', (req, res) => {
         handle(req, res)
     });

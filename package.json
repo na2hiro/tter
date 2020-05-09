@@ -19,6 +19,7 @@
     "@types/socket.io-client": "^1.4.32",
     "@types/socket.io-emitter": "^3.1.0",
     "axios": "^0.19.2",
+    "babel-plugin-emotion": "^10.0.33",
     "cookie": "^0.4.1",
     "express": "^4.17.1",
     "mongodb": "^3.5.6",
