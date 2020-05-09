@@ -73,7 +73,7 @@ const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId,
     }, []);
 
     return <>
-        <h1>{owner}'s Room: #{roomId}</h1>
+        <h1>#{roomId}: {owner==userId ? "Your" : `${owner}'s`} room</h1>
         <p>Your role: {role}</p>
         <ErrorBoundary>
             <ShogitterReact data={state} onCommand={(command: KifuCommand) => {
@@ -82,9 +82,9 @@ const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId,
                 }
             }} />
         </ErrorBoundary>
-        <pre style={{height: "300px", overflowY: "scroll"}}>
-            {JSON.stringify(state, null, 2)}
-        </pre>
+        <div>
+            Watching: {activeRooms.filter(room => room.roomId==roomId)[0]?.users.join(", ")}
+        </div>
         <h2>Share</h2>
         <ul>
             <li>Share to watch <input value={`${currentUrl}#`} size={50} readOnly /></li>

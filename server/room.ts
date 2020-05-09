@@ -2,10 +2,9 @@ import socket from "socket.io";
 import cookie from "cookie";
 import ironStore from "iron-store";
 import password from "../password";
-import roomUpdate from "./roomUpdate";
-import roomGet from "./roomGet";
 import {KifuCommand, ShogiSerialization} from "shogitter.ts";
 import { JoinRequest, UpdateRequest, UpdateResponse, GetUpdateRequest, ActiveRoomsResponse } from "../models/messages";
+import {getRoom, updateRoom} from "../stores/RoomStore";
 
 const rooms: {[room: string]: number[]} = {};
 
@@ -38,13 +37,13 @@ const configureRoom = (io: socket.Server) => {
             });
             socket.on("update", async (msg: UpdateRequest<KifuCommand>) => {
                 console.log("message", msg)
-                const newGame = await roomUpdate(msg, userId)
+                const newGame = await updateRoom(msg, userId)
                 const updateResponse: UpdateResponse<ShogiSerialization> = {game: newGame};
                 console.log("update", updateResponse);
                 room.to(msg.roomId).emit("update", updateResponse);
             });
             socket.on("getUpdate", async (msg: GetUpdateRequest) => {
-                const newGame = await roomGet<ShogiSerialization>(msg, userId)
+                const newGame = (await getRoom<ShogiSerialization>(msg.roomId)).game;
                 const updateResponse: UpdateResponse<ShogiSerialization> = {game: newGame};
                 console.log("getUpdate", updateResponse);
                 socket.emit("getUpdate", updateResponse);
