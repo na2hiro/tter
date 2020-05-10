@@ -10,6 +10,7 @@ import { JoinRequest, UpdateResponse, GetUpdateRequest, ActiveRoomsResponse, Act
 import Shogi, { ShogiSerialization, KifuCommand } from "shogitter.ts";
 import shogitterReact from "shogitter-react";
 import {ErrorBoundary} from "../../components/ErrorBoundary";
+import Share from "../../components/Share";
 
 const {default: ShogitterReact} = shogitterReact;
 
@@ -40,14 +41,11 @@ type InnerProps = Props & {
 }
 
 const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId, userId}) => {
-    const [currentUrl, setCurrentUrl] = useState("");
     const [state, setState] = useState(game);
     const [socket, setSocket] = useState(null);
     const [activeRooms, setActiveRooms] = useState<ActiveRoom[]>([]);
 
     useEffect(() => {
-        setCurrentUrl(location.href);
-
         const socket = io(`/room`);
         setSocket(socket);
 
@@ -85,12 +83,7 @@ const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId,
         <div>
             Watching: {activeRooms.filter(room => room.roomId==roomId)[0]?.users.join(", ")}
         </div>
-        <h2>Share</h2>
-        <ul>
-            <li>Share to watch <input value={`${currentUrl}#`} size={50} readOnly /></li>
-            {role==="owner" &&
-                <li>Share to edit <input value={`${currentUrl}/edit/${tokens.edit}`} size={50} readOnly /></li>}
-        </ul>
+        <Share role={role} tokens={tokens} />
         <h2>Active rooms</h2>
         <ul>
             {activeRooms.map(activeRoom => {

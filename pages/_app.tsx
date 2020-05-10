@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import io from "socket.io-client"
 import SocketContext from "../contexts/SocketContext";
 import Head from "next/head";
+import "./app.css";
 
 function MyApp({ Component, pageProps }) {
     const [socket, setSocket] = useState(null);
