@@ -27,7 +27,7 @@
     "next-iron-session": "^3.1.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "shogitter-react": "git+ssh://git@github.com/na2hiro/shogitter-react.git#931b9c48af146aa276103d2b329e0f56964ba85d",
+    "shogitter-react": "git+ssh://git@github.com/na2hiro/shogitter-react.git#c971017d12fd946da271e7fc27278b9318a3bc08",
     "shogitter-ts": "git+ssh://git@github.com/na2hiro/Shogitter.ts.git#2fcfa2b4897d002be095d70b4dde9295f61eff93",
     "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0",
