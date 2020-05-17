@@ -2,7 +2,7 @@ import { NextPage } from "next";
 import {useRouter} from "next/router";
 import ErrorPage from "next/error";
 import Link from "next/link";
-import {useState, useEffect, FunctionComponent} from "react";
+import {useState, useEffect, FunctionComponent, useCallback} from "react";
 import withSession from "../../utils/session";
 import io from "socket.io-client"
 import { getRoom } from "../../stores/RoomStore";
@@ -11,8 +11,10 @@ import Shogi, { ShogiSerialization, KifuCommand } from "shogitter.ts";
 import shogitterReact from "shogitter-react";
 import {ErrorBoundary} from "../../components/ErrorBoundary";
 import Share from "../../components/Share";
+import ActiveRooms from "../../components/ActiveRooms";
+import useTemporaryMessage from "../../utils/useTemporaryMessage";
 
-const {default: ShogitterReact} = shogitterReact;
+const {ShogitterWithoutDnDWrapper: ShogitterReact} = shogitterReact;
 
 interface Props {
     role: "owner" | "editor" | "player" | "viewer",
@@ -42,12 +44,12 @@ type InnerProps = Props & {
 
 const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId, userId}) => {
     const [state, setState] = useState(game);
-    const [socket, setSocket] = useState(null);
+    const [message, setMessage] = useTemporaryMessage(5000);
+    const [socket, setSocket] = useState(() => io(`/room`));
     const [activeRooms, setActiveRooms] = useState<ActiveRoom[]>([]);
 
     useEffect(() => {
-        const socket = io(`/room`);
-        setSocket(socket);
+        console.log("setSocket", socket)
 
         const join: JoinRequest = {roomId};
         socket.emit("join", join)
@@ -59,6 +61,10 @@ const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId,
             console.log("activeRooms")
             setActiveRooms(res.activeRooms);
         })
+        socket.on("error", (res: any) => {
+            console.log("error")
+            setMessage(res);
+        })
         socket.on("reconnect", () => {
             console.log("reconnect");
             const msg: GetUpdateRequest = {roomId};
@@ -69,42 +75,30 @@ const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId,
             socket.disconnect();
         }
     }, []);
+    const onCommand = useCallback((command: KifuCommand) => {
+        console.log("run?", command, socket, role);
+        if (socket && role !== "viewer") {
+            console.log("run", command);
+            socket!.emit("update", {roomId, command});
+        }
+    }, [socket]);
+    const watching = activeRooms.filter(room => room.roomId==roomId)[0]?.users;
 
-    return <>
+    return <div key={"room"+roomId}>
         <h1>#{roomId}: {owner==userId ? "Your" : `${owner}'s`} room</h1>
         <p>Your role: {role}</p>
+        {message}
+
         <ErrorBoundary>
-            <ShogitterReact data={state} onCommand={(command: KifuCommand) => {
-                if (socket && role !== "viewer") {
-                    socket!.emit("update", {roomId, command});
-                }
-            }} />
+            <ShogitterReact data={state} onCommand={onCommand} />
         </ErrorBoundary>
         <div>
-            Watching: {activeRooms.filter(room => room.roomId==roomId)[0]?.users.join(", ")}
+            {watching?.length || "?"} watching: {watching?.map(name=>name+" san").join(", ")}
         </div>
         <Share role={role} tokens={tokens} />
-        <h2>Active rooms</h2>
-        <ul>
-            {activeRooms.map(activeRoom => {
-                const youreIn = activeRoom.users.indexOf(userId)>=0;
-                const count = activeRoom.users.length;
-                let message;
-                if(youreIn) {
-                    if(count>1) {
-                        message = `you + ${count-1} users`;
-                    } else {
-                        message = "you";
-                    }
-                } else {
-                    message = `${count} users`;
-                }
-                return <li key={activeRoom.roomId} style={{fontWeight: youreIn ? "bold" : "normal"}}>
-                <Link as={`/${activeRoom.roomId}`} href="/[roomid]"><a>#{activeRoom.roomId}</a></Link> ({message})
-            </li>})}
-        </ul>
-        <Link as={`${parseInt(roomId)-1}`} href="[roomid]"><a>Go to previous room</a></Link>
-    </>;
+        {/*<ActiveRooms activeRooms={activeRooms} userId={userId} />*/}
+        {/*<Link as={`${parseInt(roomId)-1}`} href="[roomid]"><a>Go to previous room</a></Link>*/}
+    </div>;
 }
 
 export const getServerSideProps = withSession(async function(context) {

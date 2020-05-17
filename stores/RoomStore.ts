@@ -27,7 +27,7 @@ export const updateRoom = async (msg: UpdateRequest<KifuCommand>, userId?: numbe
         throw "You are not allowed to modify";
     }
     const game = new Shogi(room.game);
-    game.move_d(msg.command);
+    game.runCommand(msg.command);
     const newState = game.getObject();
 
     const rooms = await getRoomsCollection();

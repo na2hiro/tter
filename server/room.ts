@@ -37,10 +37,14 @@ const configureRoom = (io: socket.Server) => {
             });
             socket.on("update", async (msg: UpdateRequest<KifuCommand>) => {
                 console.log("message", msg)
-                const newGame = await updateRoom(msg, userId)
-                const updateResponse: UpdateResponse<ShogiSerialization> = {game: newGame};
-                console.log("update", updateResponse);
-                room.to(msg.roomId).emit("update", updateResponse);
+                try{
+                    const newGame = await updateRoom(msg, userId)
+                    const updateResponse: UpdateResponse<ShogiSerialization> = {game: newGame};
+                    console.log("update", updateResponse);
+                    room.to(msg.roomId).emit("update", updateResponse);
+                }catch(e) {
+                    socket.emit("error", e);
+                }
             });
             socket.on("getUpdate", async (msg: GetUpdateRequest) => {
                 const newGame = (await getRoom<ShogiSerialization>(msg.roomId)).game;

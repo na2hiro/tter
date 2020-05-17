@@ -3,6 +3,7 @@ import io from "socket.io-client"
 import SocketContext from "../contexts/SocketContext";
 import Head from "next/head";
 import "./app.css";
+import {DndWrapper} from "shogitter-react";
 
 function MyApp({ Component, pageProps }) {
     const [socket, setSocket] = useState(null);
@@ -21,9 +22,19 @@ function MyApp({ Component, pageProps }) {
             <title>Shogitter alpha</title>
             <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0" />
         </Head>
-        {!socket ? <>Connecting</> : <SocketContext.Provider value={socket}>
-        <Component {...pageProps} />
-    </SocketContext.Provider>}
+        <DndWrapper>
+            <SocketContext.Provider value={socket}>
+                <div style={{backgroundColor: "#c0deed", height: "50px", display: "flex", placeContent: "space-between", alignItems: "center"}}>
+                    <img src={"/images/shogitter.png"} style={{maxHeight: "100%", maxWidth: "100%"}} />
+                    <div>
+                        {/*My page*/}
+                    </div>
+                </div>
+                <div style={{margin: "6px"}}>
+                    {!socket ? <>Connecting</> : <Component {...pageProps} /> }
+                </div>
+            </SocketContext.Provider>
+        </DndWrapper>
     </>
 }
 
