@@ -1,8 +1,11 @@
 
 import { MongoClient, Db } from 'mongodb';
+import {mongoUser, mongoPassword} from "../password";
 
-const url = 'mongodb://localhost:27017';
 const dbName = 'tter'
+const auth = mongoUser ? `${mongoUser}${mongoPassword ? `:${encodeURIComponent(mongoPassword)}` : ""}@` : "";
+const url = `mongodb://${auth}localhost:27017/${dbName}`;
+console.log(url)
 
 let db;
 

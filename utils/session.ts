@@ -1,5 +1,5 @@
 import withIronSession from 'next-iron-session'
-import password from "../password";
+import {ironPassword} from "../password";
 import {IncomingMessage, ServerResponse} from 'http';
 import {generateUser} from "../stores/UserStore";
 
@@ -37,7 +37,7 @@ const withUserSession: (handler: Handler) => Promise<any> = (handler) => {
 
 const withSession = (handler: Handler) =>
     withIronSession(handler, {
-        password,
+        password: ironPassword,
         cookieOptions: {
             // the next line allows to use the session in non-https environements like
             // Next.js dev mode (http://localhost:3000)

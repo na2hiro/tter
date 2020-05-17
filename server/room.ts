@@ -1,7 +1,7 @@
 import socket from "socket.io";
 import cookie from "cookie";
 import ironStore from "iron-store";
-import password from "../password";
+import {ironPassword} from "../password";
 import {KifuCommand, ShogiSerialization} from "shogitter.ts";
 import { JoinRequest, UpdateRequest, UpdateResponse, GetUpdateRequest, ActiveRoomsResponse } from "../models/messages";
 import {getRoom, updateRoom} from "../stores/RoomStore";
@@ -15,7 +15,7 @@ const configureRoom = (io: socket.Server) => {
             let myRooms = [];
             const cookies = cookie.parse(socket.handshake.headers.cookie);
             const store = await ironStore({
-                password,
+                password: ironPassword,
                 sealed: cookies.__ironSession
             });
             const userId = store.get("user_id");
