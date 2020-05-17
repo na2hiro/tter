@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "ts-node --project tsconfig.server.json server.ts",
     "build": "next build",
-    "start": "NODE_ENV=production next dev",
+    "start": "NODE_ENV=production ts-node --project tsconfig.server.json server.ts",
     "start:old": "next start"
   },
   "author": "",

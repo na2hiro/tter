@@ -25,7 +25,7 @@ const withUserSession: (handler: Handler) => Promise<any> = (handler) => {
         const session = context.req.session
         if (!session.get("user_id")) {
             const userId = await generateUser({
-                raddr: context.req.connection.remoteAddress
+                raddr: context.req.headers['x-forwarded-for'] || context.req.connection?.remoteAddress || context.req.socket?.remoteAddress
             });
             console.log("generated", userId);
             session.set("user_id", userId);
