@@ -8,13 +8,14 @@ const useTemporaryMessage: (millis: number) => [string, (message: string) => voi
         if(callback) {
             clearTimeout(callback);
         }
+        if(message=="") return;
         setCallback(setTimeout(() => {
             setMessage("");
             setCallback(null);
         }, millis));
     }, [callback])
 
-    return [message, setMessage];
+    return [message, setTemporaryMessage];
 }
 
 export default useTemporaryMessage;

@@ -5,7 +5,6 @@ import {mongoUser, mongoPassword} from "../password";
 const dbName = 'tter'
 const auth = mongoUser ? `${mongoUser}${mongoPassword ? `:${encodeURIComponent(mongoPassword)}` : ""}@` : "";
 const url = `mongodb://${auth}localhost:27017/${dbName}`;
-console.log(url)
 
 let db;
 

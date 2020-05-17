@@ -42,8 +42,10 @@ const configureRoom = (io: socket.Server) => {
                     const updateResponse: UpdateResponse<ShogiSerialization> = {game: newGame};
                     console.log("update", updateResponse);
                     room.to(msg.roomId).emit("update", updateResponse);
-                }catch(e) {
-                    socket.emit("error", e);
+                }catch(e){
+                    console.log("caught", e);
+                    // TODO log errors
+                    socket.emit("errorMessage", e.message || e);
                 }
             });
             socket.on("getUpdate", async (msg: GetUpdateRequest) => {

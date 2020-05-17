@@ -55,13 +55,14 @@ const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId,
         socket.emit("join", join)
         socket.on("update", (latestState: UpdateResponse<ShogiSerialization>) => {
             console.log("update", latestState);
+            setMessage("")
             setState(latestState.game);
         })
         socket.on("activeRooms", (res: ActiveRoomsResponse) => {
             console.log("activeRooms")
             setActiveRooms(res.activeRooms);
         })
-        socket.on("error", (res: any) => {
+        socket.on("errorMessage", (res: any) => {
             console.log("error")
             setMessage(res);
         })
@@ -87,11 +88,10 @@ const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId,
     return <div key={"room"+roomId}>
         <h1>#{roomId}: {owner==userId ? "Your" : `${owner}'s`} room</h1>
         <p>Your role: {role}</p>
-        {message}
-
         <ErrorBoundary>
             <ShogitterReact data={state} onCommand={onCommand} />
         </ErrorBoundary>
+        {message}
         <div>
             {watching?.length || "?"} watching: {watching?.map(name=>name+" san").join(", ")}
         </div>
