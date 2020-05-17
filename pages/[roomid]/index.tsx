@@ -7,7 +7,7 @@ import withSession from "../../utils/session";
 import io from "socket.io-client"
 import { getRoom } from "../../stores/RoomStore";
 import { JoinRequest, UpdateResponse, GetUpdateRequest, ActiveRoomsResponse, ActiveRoom } from "../../models/messages";
-import Shogi, { ShogiSerialization, KifuCommand } from "shogitter.ts";
+import Shogi, { ShogiSerialization, KifuCommand } from "shogitter-ts";
 import shogitterReact from "shogitter-react";
 import {ErrorBoundary} from "../../components/ErrorBoundary";
 import Share from "../../components/Share";

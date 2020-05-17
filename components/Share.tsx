@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import { Teban } from "shogitter.ts/lib/Teban";
+import { Teban } from "shogitter-ts/lib/Teban";
 
 const Share = ({role, tokens}) => {
     const [currentUrl, setCurrentUrl] = useState("");

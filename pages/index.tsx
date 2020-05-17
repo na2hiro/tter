@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import withSession from "../utils/session";
 import { Room, getRoomsCollection } from "../stores/RoomStore";
-import Shogi from "shogitter.ts";
+import Shogi from "shogitter-ts";
 import { serverRedirect, BrowserRedirect } from "../utils/redirects";
 
 const HomePage = BrowserRedirect;

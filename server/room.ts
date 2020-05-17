@@ -2,7 +2,7 @@ import socket from "socket.io";
 import cookie from "cookie";
 import ironStore from "iron-store";
 import {ironPassword} from "../password";
-import {KifuCommand, ShogiSerialization} from "shogitter.ts";
+import {KifuCommand, ShogiSerialization} from "shogitter-ts";
 import { JoinRequest, UpdateRequest, UpdateResponse, GetUpdateRequest, ActiveRoomsResponse } from "../models/messages";
 import {getRoom, updateRoom} from "../stores/RoomStore";
 

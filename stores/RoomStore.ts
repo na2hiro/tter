@@ -1,6 +1,6 @@
 import { getDb } from "./mongo";
 import {GetUpdateRequest, UpdateRequest} from "../models/messages";
-import Shogi, { KifuCommand, ShogiSerialization } from "shogitter.ts";
+import Shogi, { KifuCommand, ShogiSerialization } from "shogitter-ts";
 
 export interface Room<G> {
     _id: number,
