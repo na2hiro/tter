@@ -3,29 +3,33 @@ import {ironPassword} from "../password";
 import {IncomingMessage, ServerResponse} from 'http';
 import {generateUser} from "../stores/UserStore";
 
+type Req = IncomingMessage & { session: Session };
+type Res = ServerResponse;
+
 type Session = {
     get(name: string): any;
     set(name: string, value: string): void;
     save(): Promise<void>;
 }
 type Context = {
-    req: IncomingMessage & { session: Session };
-    res: ServerResponse;
+    req: Req;
+    res: Res;
     query: { [name: string]: string };
 
 }
-type Handler = (context: Context) => Promise<any>
+type Handler<R> = (context: Context) => Promise<R>
 
 /**
  * Make sure userId exists in session. Generate if user is unknown
  * @param handler
  */
-const withUserSession: (handler: Handler) => Promise<any> = (handler) => {
+const withUserSession: <R>(handler: Handler<R>) => Promise<any> = (handler) => {
     return withSession(async (context) => {
-        const session = context.req.session
+        const {req} = context;
+        const {session} = req;
         if (!session.get("user_id")) {
             const userId = await generateUser({
-                raddr: context.req.headers['x-forwarded-for'] || context.req.connection?.remoteAddress || context.req.socket?.remoteAddress
+                raddr: req.headers['x-forwarded-for'] || req.connection?.remoteAddress || req.socket?.remoteAddress
             });
             console.log("generated", userId);
             session.set("user_id", userId);
@@ -35,7 +39,25 @@ const withUserSession: (handler: Handler) => Promise<any> = (handler) => {
     })
 };
 
-const withSession = (handler: Handler) =>
+type ApiHandler<R> = (req: Req, res: Res) => Promise<R>
+
+export const apiWithUserSession: <R>(handler: ApiHandler<R>) => Promise<any> = (handler) => {
+    return withSession(async (req, res) => {
+        const {session} = req;
+        if (!session.get("user_id")) {
+            const userId = await generateUser({
+                raddr: req.headers['x-forwarded-for'] || req.connection?.remoteAddress || req.socket?.remoteAddress
+            });
+            console.log("generated", userId);
+            session.set("user_id", userId);
+            await session.save();
+        }
+        return await handler(req, res);
+    });
+};
+
+// Polymorphic?
+const withSession = <R>(handler: ApiHandler<R> | Handler<R>) =>
     withIronSession(handler, {
         password: ironPassword,
         cookieOptions: {

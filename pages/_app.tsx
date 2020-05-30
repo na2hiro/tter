@@ -4,6 +4,7 @@ import SocketContext from "../contexts/SocketContext";
 import Head from "next/head";
 import "./app.css";
 import {DndWrapper} from "shogitter-react";
+import Link from "next/link";
 
 function MyApp({ Component, pageProps }) {
     const [socket, setSocket] = useState(null);
@@ -25,9 +26,17 @@ function MyApp({ Component, pageProps }) {
         <DndWrapper>
             <SocketContext.Provider value={socket}>
                 <div style={{backgroundColor: "#c0deed", height: "50px", display: "flex", placeContent: "space-between", alignItems: "center"}}>
-                    <img src={"/images/shogitter.png"} style={{maxHeight: "100%", maxWidth: "100%"}} />
+                    <Link href="/">
+                        <a style={{height: "100%"}}>
+                            <img src={"/images/shogitter.png"} style={{maxHeight: "100%", maxWidth: "100%"}} />
+                        </a>
+                    </Link>
                     <div>
-                        {/*My page*/}
+                        <Link href="/my">
+                            <a>
+                                My page
+                            </a>
+                        </Link>
                     </div>
                 </div>
                 <div style={{margin: "6px"}}>

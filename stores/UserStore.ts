@@ -18,3 +18,8 @@ export const generateUser = async (initialRequest: any) => {
     });
     return userId;
 }
+
+export const getUser = async(userId: number) => {
+    const userCollection = await getUsersCollection();
+    return await userCollection.findOne({_id: userId});
+}
