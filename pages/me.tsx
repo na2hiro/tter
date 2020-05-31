@@ -22,7 +22,7 @@ const Me: FunctionComponent<Props> = ({user: {id, name}, rooms}) => {
         <h1>My page</h1>
         name: <AutoSavingInput initialValue={name}
                                onSave={(value) => axios.post("/api/user/update", {name: value})} />
-        <h2>Rooms</h2>
+        <h2>My rooms</h2>
         <CreateNewRoom/>
         <ul>
             {rooms.map(room => <li key={room._id}>
