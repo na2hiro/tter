@@ -42,6 +42,9 @@ const configureRoom = (io: socket.Server) => {
                 console.log("joined", roomId, rooms, myRooms)
                 socket.join(`${roomId}`);
                 room.emit("activeRooms", calcActiveRooms());
+                const game = (await getRoom<ShogiSerialization>(roomId)).game;
+                const updateResponse: UpdateResponse<ShogiSerialization> = {game};
+                socket.emit("update", updateResponse);
             });
             socket.on("update", async (msg: UpdateRequest<KifuCommand>) => {
                 console.log("message", msg)
@@ -60,7 +63,7 @@ const configureRoom = (io: socket.Server) => {
                 const newGame = (await getRoom<ShogiSerialization>(msg.roomId)).game;
                 const updateResponse: UpdateResponse<ShogiSerialization> = {game: newGame};
                 console.log("getUpdate", updateResponse);
-                socket.emit("getUpdate", updateResponse);
+                socket.emit("update", updateResponse);
             });
             socket.on("disconnect", () => {
                 myRooms.forEach(myRoom => {

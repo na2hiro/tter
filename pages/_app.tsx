@@ -33,7 +33,7 @@ function MyApp({ Component, pageProps }) {
                     </Link>
                     <div>
                         <Link href="/me">
-                            <a>
+                            <a style={{padding: "10px"}}>
                                 My page
                             </a>
                         </Link>

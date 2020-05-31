@@ -9,12 +9,11 @@ import {getRoom} from "../../stores/RoomStore";
 import {
     JoinRequest,
     UpdateResponse,
-    GetUpdateRequest,
     ActiveRoomsResponse,
     ActiveRoom,
     User
 } from "../../models/messages";
-import Shogi, {ShogiSerialization, KifuCommand} from "shogitter-ts";
+import {ShogiSerialization, KifuCommand} from "shogitter-ts";
 import shogitterReact from "shogitter-react";
 import {ErrorBoundary} from "../../components/ErrorBoundary";
 import Share from "../../components/Share";
@@ -55,13 +54,17 @@ const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId,
     const [message, setMessage] = useTemporaryMessage(5000);
     const [socket, setSocket] = useState(() => io(`/room`));
     const [activeRooms, setActiveRooms] = useState<ActiveRoom[]>([]);
+    const [disconnected, setDisconnected] = useState(false);
+
+    useEffect(()=>{
+        document.body.style.backgroundColor=disconnected ? "#f5f5f5" : "";
+    }, [disconnected]);
 
     useEffect(() => {
-        console.log("setSocket", socket)
-
         const join: JoinRequest = {roomId};
         socket.emit("join", join)
         socket.on("update", (latestState: UpdateResponse<ShogiSerialization>) => {
+            setDisconnected(false);
             console.log("update", latestState);
             setMessage("")
             setState(latestState.game);
@@ -74,10 +77,17 @@ const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId,
             console.log("error")
             setMessage(res);
         })
+        socket.on("disconnect", (reason) => {
+            setDisconnected(true);
+            if (reason === "io server disconnect") {
+                socket.connect();
+            }
+        });
         socket.on("reconnect", () => {
             console.log("reconnect");
-            const msg: GetUpdateRequest = {roomId};
-            socket.emit("getUpdate", msg);
+            const join: JoinRequest = {roomId};
+            socket.emit("join", join)
+            setDisconnected(false);
         })
 
         return () => {
@@ -97,7 +107,7 @@ const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId,
         <h1>#{roomId}: {owner.name}'s room</h1>
         <p>Your role: {role}</p>
         <ErrorBoundary>
-            <ShogitterReact data={state} onCommand={onCommand} config={{publicPath: "/sh-react"}}/>
+            <ShogitterReact data={state} onCommand={onCommand} config={{publicPath: "/sh-react", allowSpeculative: true}}/>
         </ErrorBoundary>
         {message}
         <div>
