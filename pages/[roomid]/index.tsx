@@ -97,7 +97,7 @@ const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId,
         <h1>#{roomId}: {owner.name}'s room</h1>
         <p>Your role: {role}</p>
         <ErrorBoundary>
-            <ShogitterReact data={state} onCommand={onCommand}/>
+            <ShogitterReact data={state} onCommand={onCommand} config={{publicPath: "/sh-react"}}/>
         </ErrorBoundary>
         {message}
         <div>
