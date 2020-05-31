@@ -1,4 +1,5 @@
 import {getUsersCollection} from "./mongo";
+import {UserInfo} from "../models/messages";
 
 export const generateUser = async (initialRequest: any) => {
     const userCollection = await getUsersCollection();
@@ -17,6 +18,11 @@ export const generateUser = async (initialRequest: any) => {
         }
     });
     return userId;
+}
+
+export const updateInfo = async(userId: number, req: UserInfo) => {
+    const userCollection = await getUsersCollection();
+    await userCollection.updateOne({_id: userId}, {$set: {info: req}})
 }
 
 export const getUser = async(userId: number) => {

@@ -32,7 +32,7 @@ function MyApp({ Component, pageProps }) {
                         </a>
                     </Link>
                     <div>
-                        <Link href="/my">
+                        <Link href="/me">
                             <a>
                                 My page
                             </a>

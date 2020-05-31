@@ -21,3 +21,7 @@ export type ActiveRoom = {
     roomId: string;
     users: number[];
 }
+
+export type UserInfo = {
+    name: string;
+}

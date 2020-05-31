@@ -1,13 +1,13 @@
 import withSession from "../utils/session";
-import {getRoom, getRoomsByUserId, maskRoom, PublicRoom} from "../stores/RoomStore";
+import {getRoomsByUserId, maskRoom, PublicRoom} from "../stores/RoomStore";
 import {getUser} from "../stores/UserStore";
 import {ShogiSerialization} from "shogitter-ts";
 import {FunctionComponent, useState} from "react";
 import Link from "next/link";
 import {shogitterDB} from "shogitter-ts/lib/ShogitterDB";
 import axios from "axios";
-import {Router, useRouter} from "next/router";
 import CreateNewRoom from "../components/CreateNewRoom";
+import AutoSavingInput from "../components/AutoSavingInput";
 
 type Props = {
     user: {
@@ -17,14 +17,15 @@ type Props = {
     rooms: PublicRoom<ShogiSerialization>[]
 }
 
-const My: FunctionComponent<Props> = ({user: {id, name}, rooms}) => {
+const Me: FunctionComponent<Props> = ({user: {id, name}, rooms}) => {
     return <>
         <h1>{id}'s my page</h1>
-        name: {name}
+        name: <AutoSavingInput initialValue={name}
+                               onSave={(value) => axios.post("/api/user/update", {name: value})} />
         <h2>Rooms</h2>
         <CreateNewRoom/>
         <ul>
-            {rooms.map(room => <li>
+            {rooms.map(room => <li key={room._id}>
                 <Link href="/[roomid]" as={`/${room._id}`}><a>#{room._id}</a></Link>{' '}
                 {shogitterDB.getRule(room.game.ruleid).name}
             </li>)}
@@ -32,7 +33,7 @@ const My: FunctionComponent<Props> = ({user: {id, name}, rooms}) => {
     </>
 }
 
-export default My;
+export default Me;
 
 export const getServerSideProps = withSession(async function(context) {
     const userId = context.req.session.get("user_id");
@@ -44,7 +45,7 @@ export const getServerSideProps = withSession(async function(context) {
         props: {
             user: {
                 id: userId,
-                name: user.name || "",
+                name: user.info?.name || "",
             },
             rooms: rooms.map(maskRoom)
         }
