@@ -19,9 +19,15 @@ export type ActiveRoomsResponse = {
 
 export type ActiveRoom = {
     roomId: string;
-    users: number[];
+    users: User[];
 }
 
+// Update-able info
 export type UserInfo = {
     name: string;
+}
+
+export type User = {
+    id: number,
+    name: string,
 }

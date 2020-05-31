@@ -1,24 +1,32 @@
-import { NextPage } from "next";
+import {NextPage} from "next";
 import {useRouter} from "next/router";
 import ErrorPage from "next/error";
 import Link from "next/link";
 import {useState, useEffect, FunctionComponent, useCallback} from "react";
 import withSession from "../../utils/session";
 import io from "socket.io-client"
-import { getRoom } from "../../stores/RoomStore";
-import { JoinRequest, UpdateResponse, GetUpdateRequest, ActiveRoomsResponse, ActiveRoom } from "../../models/messages";
-import Shogi, { ShogiSerialization, KifuCommand } from "shogitter-ts";
+import {getRoom} from "../../stores/RoomStore";
+import {
+    JoinRequest,
+    UpdateResponse,
+    GetUpdateRequest,
+    ActiveRoomsResponse,
+    ActiveRoom,
+    User
+} from "../../models/messages";
+import Shogi, {ShogiSerialization, KifuCommand} from "shogitter-ts";
 import shogitterReact from "shogitter-react";
 import {ErrorBoundary} from "../../components/ErrorBoundary";
 import Share from "../../components/Share";
 import ActiveRooms from "../../components/ActiveRooms";
 import useTemporaryMessage from "../../utils/useTemporaryMessage";
+import {getUser} from "../../stores/UserStore";
 
 const {ShogitterWithoutDnDWrapper: ShogitterReact} = shogitterReact;
 
 interface Props {
     role: "owner" | "editor" | "player" | "viewer",
-    owner: number;
+    owner: User;
     game: ShogiSerialization;
     tokens: null | {
         edit: string
@@ -31,10 +39,10 @@ const RoomPage: NextPage<Props> = ({owner, game, role, tokens, userId}) => {
     const roomId: string = router.query.roomid as string;
 
     if (!owner || !game) {
-        return <ErrorPage statusCode={404} />;
+        return <ErrorPage statusCode={404}/>;
     }
 
-    return <Room {...{owner, game, role, tokens, roomId, userId}} key={roomId} />;
+    return <Room {...{owner, game, role, tokens, roomId, userId}} key={roomId}/>;
 };
 export default RoomPage;
 
@@ -83,36 +91,36 @@ const Room: FunctionComponent<InnerProps> = ({owner, game, role, tokens, roomId,
             socket!.emit("update", {roomId, command});
         }
     }, [socket]);
-    const watching = activeRooms.filter(room => room.roomId==roomId)[0]?.users;
+    const watching = activeRooms.filter(room => room.roomId == roomId)[0]?.users;
 
-    return <div key={"room"+roomId}>
-        <h1>#{roomId}: {owner==userId ? "Your" : `${owner}'s`} room</h1>
+    return <div key={"room" + roomId}>
+        <h1>#{roomId}: {owner.name}'s room</h1>
         <p>Your role: {role}</p>
         <ErrorBoundary>
-            <ShogitterReact data={state} onCommand={onCommand} />
+            <ShogitterReact data={state} onCommand={onCommand}/>
         </ErrorBoundary>
         {message}
         <div>
-            {watching?.length || "?"} watching: {watching?.map(name=>name+" san").join(", ")}
+            {watching?.length || "?"} watching: {watching?.map(user => user.name).join(", ")}
         </div>
-        <Share role={role} tokens={tokens} />
+        <Share role={role} tokens={tokens}/>
         {/*<ActiveRooms activeRooms={activeRooms} userId={userId} />*/}
         {/*<Link as={`${parseInt(roomId)-1}`} href="[roomid]"><a>Go to previous room</a></Link>*/}
     </div>;
 }
 
-export const getServerSideProps = withSession(async function(context) {
+export const getServerSideProps = withSession(async function (context) {
     const room = await getRoom(context.query.roomid);
-    if(!room) {
-        return { props: {} };
+    if (!room) {
+        return {props: {}};
     }
 
     const userId = context.req.session.get("user_id");
 
     let role;
-    if(userId === room.permission.owner) {
+    if (userId === room.permission.owner) {
         role = "owner";
-    } else if(room.permission.editors.indexOf(userId)>=0) {
+    } else if (room.permission.editors.indexOf(userId) >= 0) {
         role = "editor";
     } else {
         role = "viewer";
@@ -125,7 +133,7 @@ export const getServerSideProps = withSession(async function(context) {
     return {
         props: {
             role,
-            owner: room.permission.owner,
+            owner: await getUser(room.permission.owner),
             game: room.game,
             tokens,
             userId

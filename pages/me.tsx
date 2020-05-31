@@ -19,7 +19,7 @@ type Props = {
 
 const Me: FunctionComponent<Props> = ({user: {id, name}, rooms}) => {
     return <>
-        <h1>{id}'s my page</h1>
+        <h1>My page</h1>
         name: <AutoSavingInput initialValue={name}
                                onSave={(value) => axios.post("/api/user/update", {name: value})} />
         <h2>Rooms</h2>
@@ -37,16 +37,12 @@ export default Me;
 
 export const getServerSideProps = withSession(async function(context) {
     const userId = context.req.session.get("user_id");
-    const user = await getUser(userId);
 
     const rooms = await getRoomsByUserId(userId);
 
     return {
         props: {
-            user: {
-                id: userId,
-                name: user.info?.name || "",
-            },
+            user: await getUser(userId),
             rooms: rooms.map(maskRoom)
         }
     };

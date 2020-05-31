@@ -1,5 +1,5 @@
 import withIronSession from 'next-iron-session'
-import {ironPassword} from "../password";
+import {ironDataVersion, ironPassword} from "../password";
 import {IncomingMessage, ServerResponse} from 'http';
 import {generateUser} from "../stores/UserStore";
 
@@ -26,15 +26,7 @@ type Handler<R> = (context: Context) => Promise<R>
 const withUserSession: <R>(handler: Handler<R>) => Promise<any> = (handler) => {
     return withSession(async (context) => {
         const {req} = context;
-        const {session} = req;
-        if (!session.get("user_id")) {
-            const userId = await generateUser({
-                raddr: req.headers['x-forwarded-for'] || req.connection?.remoteAddress || req.socket?.remoteAddress
-            });
-            console.log("generated", userId);
-            session.set("user_id", userId);
-            await session.save();
-        }
+        await createIfNeeded(req);
         return await handler(context);
     })
 };
@@ -43,18 +35,23 @@ type ApiHandler<R> = (req: Req, res: Res) => Promise<R>
 
 export const apiWithUserSession: <R>(handler: ApiHandler<R>) => Promise<any> = (handler) => {
     return withSession(async (req, res) => {
-        const {session} = req;
-        if (!session.get("user_id")) {
-            const userId = await generateUser({
-                raddr: req.headers['x-forwarded-for'] || req.connection?.remoteAddress || req.socket?.remoteAddress
-            });
-            console.log("generated", userId);
-            session.set("user_id", userId);
-            await session.save();
-        }
+        await createIfNeeded(req);
         return await handler(req, res);
     });
 };
+
+const createIfNeeded = async (req) => {
+    const {session} = req;
+    if (!session.get("user_id") || session.get("v") != ironDataVersion) {
+        const userId = await generateUser({
+            raddr: req.headers['x-forwarded-for'] || req.connection?.remoteAddress || req.socket?.remoteAddress
+        });
+        console.log("generated", userId);
+        session.set("user_id", userId);
+        session.set("v", ironDataVersion);
+        await session.save();
+    }
+}
 
 // Polymorphic?
 const withSession = <R>(handler: ApiHandler<R> | Handler<R>) =>

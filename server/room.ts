@@ -3,10 +3,18 @@ import cookie from "cookie";
 import ironStore from "iron-store";
 import {ironPassword} from "../password";
 import {KifuCommand, ShogiSerialization} from "shogitter-ts";
-import { JoinRequest, UpdateRequest, UpdateResponse, GetUpdateRequest, ActiveRoomsResponse } from "../models/messages";
+import {
+    JoinRequest,
+    UpdateRequest,
+    UpdateResponse,
+    GetUpdateRequest,
+    ActiveRoomsResponse,
+    User
+} from "../models/messages";
 import {getRoom, updateRoom} from "../stores/RoomStore";
+import {getUser} from "../stores/UserStore";
 
-const rooms: {[room: string]: number[]} = {};
+const rooms: {[room: string]: User[]} = {};
 
 const configureRoom = (io: socket.Server) => {
     const room = io
@@ -18,19 +26,19 @@ const configureRoom = (io: socket.Server) => {
                 password: ironPassword,
                 sealed: cookies.__ironSession
             });
-            const userId = store.get("user_id");
+            const userId: number | undefined = store.get("user_id");
             if (!userId) {
                 socket.emit("error", "Cannot auth");
                 socket.disconnect();
                 return;
             }
             
-            socket.on("join", ({roomId}: JoinRequest) => {
+            socket.on("join", async ({roomId}: JoinRequest) => {
                 myRooms.push(roomId);
-                if(!rooms[roomId]){
+                if (!rooms[roomId]) {
                     rooms[roomId] = [];
                 }
-                rooms[roomId].push(userId)
+                rooms[roomId].push(await getUser(userId))
                 console.log("joined", roomId, rooms, myRooms)
                 socket.join(`${roomId}`);
                 room.emit("activeRooms", calcActiveRooms());
@@ -56,7 +64,7 @@ const configureRoom = (io: socket.Server) => {
             });
             socket.on("disconnect", () => {
                 myRooms.forEach(myRoom => {
-                    const index = rooms[myRoom].indexOf(userId);
+                    const index = rooms[myRoom].findIndex(user => user.id == userId);
                     rooms[myRoom].splice(index, 1)
                     if (rooms[myRoom].length == 0) {
                         delete rooms[myRoom];

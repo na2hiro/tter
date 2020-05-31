@@ -11,7 +11,7 @@ const ActiveRooms: FunctionComponent<Props> = ({activeRooms, userId}) => {
         <h2>Active rooms</h2>
         <ul>
             {activeRooms.map(activeRoom => {
-                const youreIn = activeRoom.users.indexOf(userId) >= 0;
+                const youreIn = activeRoom.users.map(user=>user.id).indexOf(userId) >= 0;
                 const count = activeRoom.users.length;
                 let message;
                 if (youreIn) {
