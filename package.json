@@ -26,7 +26,7 @@
     "next-iron-session": "^3.1.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "socket.io-client": "^2.3.0",
     "socket.io-emitter": "^3.1.1",
     "swr": "^0.2.0",
